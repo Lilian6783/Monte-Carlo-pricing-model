@@ -1,0 +1,65 @@
+#Importing libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+#Setting imputs
+S0 = 190     
+T = 5         
+K = 110       
+r = 0.048      
+sigma = 0.50  
+
+#Setting option type
+option_type = "Call option"
+
+#Setting number of Monte Carlo simulation iterations
+iterations = 1000
+
+#Setting number of time steps
+time_steps = 252
+
+#Determining the length of 1 time step
+dt = T / time_steps
+
+#Creating an array to store price paths with the spot price as the initial price for all price paths
+S = np.zeros((iterations, time_steps +1))
+S[:, 0] = S0
+
+#Generating all random shocks
+Z = np.random.standard_normal((iterations, time_steps))
+
+#Simulating paths using geometric Brownian motion formula
+for t in range(1, time_steps +1):
+  S[:, t] = S[:, t-1] * np.exp((r - 0.5 * sigma**2) * dt + sigma * np.sqrt(dt) * Z[:, t-1])
+
+#Calculating payoff at maturity
+payoff_call = np.maximum(S[:,-1] -K, 0)
+call_price = np.exp(-r * T) * np.mean(payoff_call)
+payoff_put = np.maximum(0, K - S[:, -1])
+put_price = np.exp(-r * T) * np.mean(payoff_put)
+
+#Printing results
+print("Call price is:", round(call_price, 2))
+print("Put price is:", round(put_price, 2))
+
+#Generating a graph with 100 price paths
+plt.figure(figsize=(14, 6))
+plt.subplot(1, 2 ,1)
+for i in range(5):
+  plt.plot(S[i], lw=0.5, alpha=0.6)
+plt.title(f"Simulated Call Price paths = {round(call_price, 2)}")
+plt.xlabel("Time Steps")
+plt.ylabel("Call Price")
+plt.grid(True)
+
+plt.subplot(1, 2 ,2)
+for i in range(100):
+  plt.plot(S[i], lw=0.5, alpha=0.6)
+plt.title(f"Simulated Put Price paths = {round(put_price, 2)}")
+plt.xlabel("Time Steps")
+plt.ylabel("Put Price")
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
